@@ -2,7 +2,7 @@ name: Sync Fork with Upstream
 
 on:
   schedule:
-    - cron: '15 9 * * *'  # 每天午夜运行同步（可以根据需要调整时间）
+    - cron: '59 9 * * *'  # 每天午夜运行同步（可以根据需要调整时间）
   workflow_dispatch:  # 手动触发
 
 jobs:
@@ -29,5 +29,5 @@ jobs:
     - name: Merge Upstream into Fork
       run: |
         git checkout main  # 或者替换为你的目标分支（如V2）
-        git merge upstream/main  # 或者替换为对应的分支
+        git merge upstream/main  --allow-unrelated-histories  # 强制合并不同历史的分支
         git push origin main  # 或者替换为你的目标分支
