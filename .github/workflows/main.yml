@@ -1,33 +1,40 @@
-name: Sync Fork with Upstream
+name: Upstream Sync
+
+permissions:
+  contents: write
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天午夜运行同步（可以根据需要调整时间）
+    - cron: "0 0 * * *" # 每天午夜运行同步（根据需求调整时间）
   workflow_dispatch:  # 手动触发
 
 jobs:
-  sync:
+  sync_latest_from_upstream:
+    name: Sync latest commits from upstream repo
     runs-on: ubuntu-latest
+    if: ${{ github.event.repository.fork }}  # 仅在仓库为 fork 时执行
 
     steps:
-    - name: Checkout Fork
-      uses: actions/checkout@v2
-      with:
-        ref: main  # 或者替换为你的目标分支（如V2）
+      # Step 1: run a standard checkout action
+      - name: Checkout target repo
+        uses: actions/checkout@v3
 
-    - name: Set Up Git
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
+      # Step 2: run the sync action
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
+        with:
+          upstream_sync_repo: nikkinikki-org/OpenWrt-nikki  # 使用目标上游仓库
+          upstream_sync_branch: main  # 使用目标分支（例如main）
+          target_sync_branch: main  # 目标分支（例如main）
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}  # 使用自动生成的 GitHub token
 
-    - name: Add Upstream Remote
-      run: git remote add upstream https://github.com/nikkinikki-org/OpenWrt-nikki.git
+          # Set test_mode true to run tests instead of the true action!!
+          test_mode: false
 
-    - name: Fetch Upstream
-      run: git fetch upstream
-
-    - name: Merge Upstream into Fork
-      run: |
-        git checkout main  # 或者替换为你的目标分支（如V2）
-        git merge upstream/main  --allow-unrelated-histories  # 强制合并不同历史的分支
-        git push origin main  # 或者替换为你的目标分支
+      - name: Sync check
+        if: failure()
+        run: |
+          echo "[Error] 由于上游仓库的 workflow 文件变更，导致 GitHub 自动暂停了本次自动更新，你需要手动 Sync Fork 一次，详细教程请查看项目README.md "
+          echo "[Error] Due to a change in the workflow file of the upstream repository, GitHub has automatically suspended the scheduled automatic update. You need to manually sync your fork. Please refer to the project README.md for instructions. "
+          exit 1
