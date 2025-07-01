@@ -13,7 +13,7 @@ jobs:
     - name: Checkout Fork
       uses: actions/checkout@v2
       with:
-        ref: main  # 使用你的目标分支，如果是其他分支，替换为相应分支
+        ref: main  # 或者替换为你的目标分支（如V2）
 
     - name: Set Up Git
       run: |
@@ -24,4 +24,10 @@ jobs:
       run: git remote add upstream https://github.com/nikkinikki-org/OpenWrt-nikki.git
 
     - name: Fetch Upstream
-      run:
+      run: git fetch upstream
+
+    - name: Merge Upstream into Fork
+      run: |
+        git checkout main  # 或者替换为你的目标分支（如V2）
+        git merge upstream/main  # 或者替换为对应的分支
+        git push origin main  # 或者替换为你的目标分支
